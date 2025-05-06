@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Interactive Experience</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #000;
+            color: #fff;
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            pointer-events: none;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1.5rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 3;
+            pointer-events: all;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #ff6b6b, #5f27cd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0.7;
+        }
+
+        .nav-link:hover {
+            opacity: 1;
+            transform: translateY(-3px);
+        }
+
+        .title-container {
+            margin-top: 20vh;
+            text-align: center;
+            pointer-events: all;
+        }
+
+        h1 {
+            font-size: 5rem;
+            line-height: 1;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            background: linear-gradient(to right, #ff6b6b, #5f27cd, #48dbfb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0;
+            transform: translateY(50px);
+            animation: fadeInUp 1s ease forwards 0.5s;
+        }
+
+        p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 1s ease forwards 0.8s;
+        }
+
+        .cta-button {
+            padding: 1rem 2.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            background: linear-gradient(45deg, #ff6b6b, #5f27cd);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(95, 39, 205, 0.4);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 1s ease forwards 1.1s;
+            pointer-events: all;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(95, 39, 205, 0.6);
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            opacity: 0;
+            animation: fadeIn 1s ease forwards 1.5s;
+        }
+
+        .scroll-text {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .scroll-icon {
+            width: 30px;
+            height: 50px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+            position: relative;
+        }
+
+        .scroll-icon::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            width: 6px;
+            height: 6px;
+            background: #fff;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            animation: scrollDown 2s infinite;
+        }
+
+        .section {
+            min-height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 8rem 2rem;
+            margin: 4rem 0;
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 1s ease;
+            pointer-events: all;
+        }
+
+        .section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section-title {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(to right, #48dbfb, #5f27cd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .features {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            max-width: 1200px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            width: 300px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(95, 39, 205, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+            background: linear-gradient(45deg, #ff6b6b, #5f27cd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .feature-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-desc {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .contact-form {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 3rem;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            border-color: #5f27cd;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(95, 39, 205, 0.3);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(45deg, #ff6b6b, #5f27cd);
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(95, 39, 205, 0.4);
+        }
+
+        .footer {
+            padding: 2rem;
+            text-align: center;
+            opacity: 0.7;
+            font-size: 0.9rem;
+            pointer-events: all;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes scrollDown {
+            0% {
+                opacity: 1;
+                top: 10px;
+            }
+            50% {
+                opacity: 1;
+                top: 25px;
+            }
+            100% {
+                opacity: 0;
+                top: 25px;
+            }
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+            
+            .nav-links {
+                gap: 1rem;
+            }
+            
+            h1 {
+                font-size: 3rem;
+            }
+            
+            .features {
+                gap: 1rem;
+            }
+            
+            .feature-card {
+                width: 100%;
+            }
+            
+            .contact-form {
+                padding: 1.5rem;
+            }
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-progress {
+            width: 200px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(45deg, #ff6b6b, #5f27cd);
+            transition: width 0.5s ease;
+        }
+
+        .loading-text {
+            position: absolute;
+            top: -30px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 1rem;
+            color: #fff;
+        }
+
+        .cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(95, 39, 205, 0.5);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: difference;
+            transition: transform 0.1s ease, width 0.3s ease, height 0.3s ease;
+        }
+
+        .cursor-follower {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid rgba(95, 39, 205, 0.5);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9998;
+            transition: transform 0.3s ease, width 0.3s ease, height 0.3s ease;
+        }
+
+        [data-cursor="pointer"] {
+            cursor: none;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 3rem;
+            max-width: 600px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transform: translateY(30px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .modal.open .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .close-modal:hover {
+            opacity: 1;
+            transform: rotate(90deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-screen">
+        <div class="loading-progress">
+            <div class="progress-bar"></div>
+            <div class="loading-text">Loading Experience... 0%</div>
+        </div>
+    </div>
+
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+
+    <canvas></canvas>
+
+    <div class="content" style="min-height: 300vh;">
+        <header class="header">
+            <div class="logo" data-cursor="pointer">SPACE3D</div>
+            <div class="nav-links">
+                <div class="nav-link" data-cursor="pointer">Home</div>
+                <div class="nav-link" data-cursor="pointer">Features</div>
+                <div class="nav-link" data-cursor="pointer">Contact</div>
+                <div class="nav-link" data-cursor="pointer" id="modal-btn">About</div>
+            </div>
+        </header>
+
+        <div class="title-container">
+            <h1>Immersive 3D Experience</h1>
+            <p>Explore our interactive 3D environment with dynamic elements and cutting-edge visuals. Scroll to discover more about our world.</p>
+            <button class="cta-button" data-cursor="pointer">Get Started</button>
+        </div>
+
+        <div class="scroll-indicator">
+            <div class="scroll-text">Scroll to explore</div>
+            <div class="scroll-icon"></div>
+        </div>
+
+        <section class="section" id="features">
+            <h2 class="section-title">Amazing Features</h2>
+            <div class="features">
+                <div class="feature-card" data-cursor="pointer">
+                    <div class="feature-icon">⚡</div>
+                    <h3 class="feature-title">Dynamic 3D</h3>
+                    <p class="feature-desc">Experience our cutting-edge 3D elements that respond to user interaction and create an immersive environment.</p>
+                </div>
+                <div class="feature-card" data-cursor="pointer">
+                    <div class="feature-icon">🔮</div>
+                    <h3 class="feature-title">Interactive Objects</h3>
+                    <p class="feature-desc">Engage with responsive 3D objects that transform and react to your mouse movements and scrolling.</p>
+                </div>
+                <div class="feature-card" data-cursor="pointer">
+                    <div class="feature-icon">🚀</div>
+                    <h3 class="feature-title">Stellar Performance</h3>
+                    <p class="feature-desc">Optimized for speed and smoothness, ensuring a seamless experience on all devices and browsers.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="contact">
+            <h2 class="section-title">Get In Touch</h2>
+            <div class="contact-form">
+                <div class="form-group">
+                    <label class="form-label">Name</label>
+                    <input type="text" class="form-input" placeholder="Your name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" placeholder="Your email address">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Message</label>
+                    <textarea class="form-input" rows="4" placeholder="Your message"></textarea>
+                </div>
+                <button class="submit-btn" data-cursor="pointer">Send Message</button>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <p>&copy; 2025 SPACE3D. All rights reserved. Created with Three.js</p>
+        </footer>
+    </div>
+
+    <div class="modal" id="about-modal">
+        <div class="modal-content">
+            <span class="close-modal" data-cursor="pointer">&times;</span>
+            <h2 class="section-title">About Us</h2>
+            <p style="opacity: 1; transform: none; animation: none; margin-bottom: 1.5rem;">
+                We are pioneers in creating immersive 3D web experiences that push the boundaries of what's possible in a browser.
+            </p>
+            <p style="opacity: 1; transform: none; animation: none;">
+                Our team of designers and developers work together to craft unique digital experiences that captivate and engage users through innovative 3D technologies and interactive elements.
+            </p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Custom cursor
+        const cursor = document.querySelector('.cursor');
+        const cursorFollower = document.querySelector('.cursor-follower');
+        const cursorElements = document.querySelectorAll('[data-cursor="pointer"]');
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            
+            setTimeout(() => {
+                cursorFollower.style.left = e.clientX + 'px';
+                cursorFollower.style.top = e.clientY + 'px';
+            }, 100);
+        });
+
+        cursorElements.forEach(element => {
+            element.addEventListener('mouseenter', () => {
+                cursor.style.width = '30px';
+                cursor.style.height = '30px';
+                cursorFollower.style.width = '50px';
+                cursorFollower.style.height = '50px';
+            });
+            
+            element.addEventListener('mouseleave', () => {
+                cursor.style.width = '20px';
+                cursor.style.height = '20px';
+                cursorFollower.style.width = '40px';
+                cursorFollower.style.height = '40px';
+            });
+        });
+
+        // Modal functionality
+        const modal = document.getElementById('about-modal');
+        const modalBtn = document.getElementById('modal-btn');
+        const closeModal = document.querySelector('.close-modal');
+
+        modalBtn.addEventListener('click', () => {
+            modal.classList.add('open');
+        });
+
+        closeModal.addEventListener('click', () => {
+            modal.classList.remove('open');
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('open');
+            }
+        });
+
+        // Scroll animations
+        const sections = document.querySelectorAll('.section');
+
+        function checkSections() {
+            sections.forEach(section => {
+                const sectionTop = section.getBoundingClientRect().top;
+                const windowHeight = window.innerHeight;
+                
+                if (sectionTop < windowHeight * 0.75) {
+                    section.classList.add('visible');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', checkSections);
+
+        // Loading screen
+        const loadingScreen = document.querySelector('.loading-screen');
+        const progressBar = document.querySelector('.progress-bar');
+        const loadingText = document.querySelector('.loading-text');
+        let progress = 0;
+
+        const loadingInterval = setInterval(() => {
+            progress += Math.random() * 10;
+            if (progress > 100) progress = 100;
+            
+            progressBar.style.width = progress + '%';
+            loadingText.textContent = `Loading Experience... ${Math.floor(progress)}%`;
+            
+            if (progress === 100) {
+                clearInterval(loadingInterval);
+                setTimeout(() => {
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                    }, 500);
+                }, 500);
+            }
+        }, 200);
+
+        // Three.js setup
+        let scene, camera, renderer, clock;
+        let particles, geometries = [], materials = [];
+        let raycaster, mouse;
+        let objectsToInteract = [];
+        let galaxyPoints, galaxyMaterial;
+
+        const initThree = () => {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 15;
+
+            renderer = new THREE.WebGLRenderer({
+                canvas: document.querySelector('canvas'),
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            clock = new THREE.Clock();
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            createLights();
+            createEnvironment();
+            createParticles();
+            createGeometries();
+            createGalaxy();
+
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('scroll', onScroll);
+
+            animate();
+        };
+
+        const createLights = () => {
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            const pointLight1 = new THREE.PointLight(0xff6b6b, 1, 100);
+            pointLight1.position.set(10, 5, 10);
+            scene.add(pointLight1);
+
+            const pointLight2 = new THREE.PointLight(0x5f27cd, 1, 100);
+            pointLight2.position.set(-10, -5, 10);
+            scene.add(pointLight2);
+        };
+
+        const createEnvironment = () => {
+            // Create starfield background
+            const starsGeometry = new THREE.BufferGeometry();
+            const starsMaterial = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 0.1,
+            });
+
+            const starsVertices = [];
+            for (let i = 0; i < 1000; i++) {
+                const x = (Math.random() - 0.5) * 2000;
+                const y = (Math.random() - 0.5) * 2000;
+                const z = -Math.random() * 2000;
+                starsVertices.push(x, y, z);
+            }
+
+            starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
+            const stars = new THREE.Points(starsGeometry, starsMaterial);
+            scene.add(stars);
+        };
+
+        const createGalaxy = () => {
+            // Create a galaxy spiral
+            const galaxyGeometry = new THREE.BufferGeometry();
+            const galaxyMaterial = new THREE.PointsMaterial({
+                color: 0xaaaaaa,
+                size: 0.1,
+                transparent: true,
+                opacity: 0.8,
+                vertexColors: true,
+            });
+
+            const galaxyVertices = [];
+            const galaxyColors = [];
+            const spiralArms = 3;
+            const spiralPoints = 20000;
+
+            for (let i = 0; i < spiralPoints; i++) {
+                const arm = Math.floor(Math.random() * spiralArms);
+                const t = Math.random() * Math.PI * 2;
+                const radius = Math.random() * 10;
+                const armOffset = (2 * Math.PI) / spiralArms * arm;
+                
+                const x = radius * Math.cos(t + armOffset + radius * 0.2);
+                const y = radius * Math.sin(t + armOffset + radius * 0.2);
+                const z = (Math.random() - 0.5) * 2;
+                
+                galaxyVertices.push(x, y, z);
+                
+                // Colors
+                let r, g, b;
+                if (arm === 0) {
+                    r = 1; g = 0.3; b = 0.3; // Reddish
+                } else if (arm === 1) {
+                    r = 0.3; g = 0.3; b = 1; // Bluish
+                } else {
+                    r = 1; g = 1; b = 0.3; // Yellowish
+                }
+                
+                galaxyColors.push(r, g, b);
+            }
+
+            galaxyGeometry.setAttribute('position', new THREE.Float32BufferAttribute(galaxyVertices, 3));
+            galaxyGeometry.setAttribute('color', new THREE.Float32BufferAttribute(galaxyColors, 3));
+            
+            galaxyPoints = new THREE.Points(galaxyGeometry, galaxyMaterial);
+            galaxyPoints.position.z = -20;
+            scene.add(galaxyPoints);
+        };
+
+        const createParticles = () => {
+            const particlesGeometry = new THREE.BufferGeometry();
+            const particlesCnt = 1000;
+            const posArray = new Float32Array(particlesCnt * 3);
+            
+            for (let i = 0; i < particlesCnt * 3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 20;
+            }
+            
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            
+            const particlesMaterial = new THREE.PointsMaterial({
+                size: 0.05,
+                color: 0xffffff,
+            });
+            
+            particles = new THREE.Points(particlesGeometry, particlesMaterial);
+            scene.add(particles);
+        };
+
+        const createGeometries = () => {
+            // Create various 3D objects for interactive elements
+            
+            // Torus
+            const torusGeometry = new THREE.TorusGeometry(3, 0.5, 16, 100);
+            const torusMaterial = new THREE.MeshStandardMaterial({
+                color: 0xff6b6b,
+                metalness: 0.7,
+                roughness: 0.2,
+                emissive: 0x331133,
+                emissiveIntensity: 0.5,
+            });
+            const torus = new THREE.Mesh(torusGeometry, torusMaterial);
+            torus.position.set(-8, 5, -10);
+            torus.userData = { rotationSpeed: 0.01 };
+            scene.add(torus);
+            objectsToInteract.push(torus);
+            geometries.push(torus);
+            
+            // Icosahedron
+            const icosaGeometry = new THREE.IcosahedronGeometry(2, 0);
+            const icosaMaterial = new THREE.MeshStandardMaterial({
+                color: 0x5f27cd,
+                metalness: 0.8,
+                roughness: 0.2,
+                wireframe: true,
+            });
+            const icosahedron = new THREE.Mesh(icosaGeometry, icosaMaterial);
+            icosahedron.position.set(8, -5, -12);
+            icosahedron.userData = { rotationSpeed: 0.005 };
+            scene.add(icosahedron);
+            objectsToInteract.push(icosahedron);
+            geometries.push(icosahedron);
+            
+            // Dodecahedron
+            const dodecaGeometry = new THREE.DodecahedronGeometry(1.5, 0);
+            const dodecaMaterial = new THREE.MeshStandardMaterial({
+                color: 0x48dbfb,
+                metalness: 0.5,
+                roughness: 0.5,
+                transparent: true,
+                opacity: 0.8,
+            });
+            const dodecahedron = new THREE.Mesh(dodecaGeometry, dodecaMaterial);
+            dodecahedron.position.set(0, 8, -15);
+            dodecahedron.userData = { rotationSpeed: 0.015 };
+            scene.add(dodecahedron);
+            objectsToInteract.push(dodecahedron);
+            geometries.push(dodecahedron);
+            
+            // Ring of spheres
+            const sphereGeometry = new THREE.SphereGeometry(0.5, 24, 24);
+            const sphereMaterial = new THREE.MeshStandardMaterial({
+                color: 0xfeca57,
+                metalness: 0.7,
+                roughness: 0.2,
+            });
+            
+            const sphereCount = 12;
+            const sphereRadius = 6;
+            
+            for (let i = 0; i < sphereCount; i++) {
+                const angle = (i / sphereCount) * Math.PI * 2;
+                const x = Math.cos(angle) * sphereRadius;
+                const y = Math.sin(angle) * sphereRadius;
+                
+                const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial.clone());
+                sphere.position.set(x, y, -20);
+                sphere.userData = { 
+                    rotationSpeed: 0.01,
+                    originalPosition: { x, y, z: -20 },
+                    amplitude: 1,
+                    phase: i / sphereCount * Math.PI * 2
+                };
+                scene.add(sphere);
+                geometries.push(sphere);
+            }
+            
+            // Floating cubes
+            const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+            for (let i = 0; i < 20; i++) {
+                const cubeMaterial = new THREE.MeshStandardMaterial({
+                    color: new THREE.Color(
+                        0.5 + Math.random() * 0.5,
+                        0.5 + Math.random() * 0.5,
+                        0.5 + Math.random() * 0.5
+                    ),
+                    metalness: Math.random(),
+                    roughness: Math.random(),
+                });
+                
+                const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+                cube.position.set(
+                    (Math.random() - 0.5) * 30,
+                    (Math.random() - 0.5) * 30,
+                    -30 - Math.random() * 20
+                );
+                cube.rotation.set(
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI
+                );
+                cube.scale.set(
+                    0.5 + Math.random(),
+                    0.5 + Math.random(),
+                    0.5 + Math.random()
+                );
+                cube.userData = {
+                    rotationSpeed: 0.01 + Math.random() * 0.02,
+                    floatingSpeed: 0.005 + Math.random() * 0.01,
+                    floatingDirection: Math.random() > 0.5 ? 1 : -1,
+                    originalPosition: { ...cube.position }
+                };
+                scene.add(cube);
+                geometries.push(cube);
+            }
+        };
+
+        const onWindowResize = () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        };
+
+        const onMouseMove = (event) => {
+            // Update mouse position for raycasting
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            // Move camera slightly based on mouse position
+            const targetX = (mouse.x * 0.3);
+            const targetY = (mouse.y * 0.3);
+            
+            camera.position.x += (targetX - camera.position.x) * 0.05;
+            camera.position.y += (targetY - camera.position.y) * 0.05;
+            camera.lookAt(0, 0, 0);
+        };
+
+        const onScroll = () => {
+            const scrollY = window.scrollY;
+            const windowHeight = window.innerHeight;
+            
+            // Adjust camera and objects based on scroll position
+            const scrollProgress = scrollY / (document.body.scrollHeight - windowHeight);
+            
+            // Rotate galaxy based on scroll
+            if (galaxyPoints) {
+                galaxyPoints.rotation.z = scrollProgress * Math.PI * 2;
+            }
+            
+            // Move camera back as user scrolls
+            camera.position.z = 15 + scrollProgress * 10;
+        };
+
+        const animate = () => {
+            requestAnimationFrame(animate);
+            
+            const elapsedTime = clock.getElapsedTime();
+            
+            // Animate particles
+            particles.rotation.x = elapsedTime * 0.05;
+            particles.rotation.y = elapsedTime * 0.075;
+            
+            // Animate geometries
+            geometries.forEach(obj => {
+                // Basic rotation
+                obj.rotation.x += obj.userData.rotationSpeed || 0.01;
+                obj.rotation.y += obj.userData.rotationSpeed || 0.01;
+                
+                // Floating animation for cubes
+                if (obj.userData.floatingSpeed) {
+                    obj.position.y = obj.userData.originalPosition.y + 
+                        Math.sin(elapsedTime * obj.userData.floatingSpeed) * 
+                        obj.userData.floatingDirection * 2;
+                }
+                
+                // Pulsing animation for spheres
+                if (obj.userData.amplitude && obj.userData.phase !== undefined) {
+                    const scale = 0.8 + Math.sin(elapsedTime * 2 + obj.userData.phase) * 0.2;
+                    obj.scale.set(scale, scale, scale);
+                }
+            });
+            
+            // Interactive hover effect
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(objectsToInteract);
+            
+            if (intersects.length > 0) {
+                document.body.style.cursor = 'pointer';
+                intersects[0].object.rotation.x += 0.05;
+                intersects[0].object.rotation.y += 0.05;
+            } else {
+                document.body.style.cursor = 'auto';
+            }
+            
+            // Rotate galaxy
+            if (galaxyPoints) {
+                galaxyPoints.rotation.z += 0.0005;
+            }
+            
+            renderer.render(scene, camera);
+        };
+
+        // Initialize Three.js after loading
+        window.addEventListener('load', initThree);
+
+        // Add event listeners to buttons
+        document.querySelector('.cta-button').addEventListener('click', () => {
+            window.scrollTo({
+                top: document.getElementById('features').offsetTop,
+                behavior: 'smooth'
+            });
+        });
+
+        document.querySelectorAll('.nav-link').forEach((link, index) => {
+            link.addEventListener('click', () => {
+                if (index === 0) { // Home
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                } else if (index === 1) { // Features
+                    window.scrollTo({
+                        top: document.getElementById('features').offsetTop,
+                        behavior: 'smooth'
+                    });
+                } else if (index === 2) { // Contact
+                    window.scrollTo({
+                        top: document.getElementById('contact').offsetTop,
+                        behavior: 'smooth'
+                    });
+                }
+                // About modal is handled separately
+            });
+        });
+
+        // Initialize sections visibility check on load
+        window.addEventListener('load', checkSections);
+    </script>
+</body>
+</html>
